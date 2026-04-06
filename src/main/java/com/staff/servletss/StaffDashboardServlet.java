@@ -1,5 +1,6 @@
 package com.staff.servletss;
 
+import com.staff.model.Request;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,7 +33,7 @@ public class StaffDashboardServlet extends HttpServlet {
         request.setAttribute("requests", requests);
 
         // Navigate to JSP
-        request.getRequestDispatcher("dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/staff/dashboard.jsp").forward(request, response);
     }
 
     // Handle form submission (New Bus Request)
@@ -46,7 +47,8 @@ public class StaffDashboardServlet extends HttpServlet {
         String date = request.getParameter("date");
 
         // Create request object
-        Request req = new Request(requests.size() + 1, purpose, destination, passengers, date, "Pending");
+        String passengerInitials = passengers == null || passengers.isBlank() ? "N/A" : passengers + " pax";
+        Request req = new Request(requests.size() + 1, purpose, passengerInitials, destination, date, "Pending");
 
         requests.add(req);
 
