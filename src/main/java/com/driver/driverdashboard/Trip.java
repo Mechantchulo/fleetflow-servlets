@@ -1,6 +1,7 @@
-package com.driver;
+package com.driver.driverdashboard;
 
 //This is the model class to meet the MVC, helps avoid arraylist of trips in the servlet and instead have a list of trip objects
+//In class was told this a
 public class Trip {
     private String id;
     private String destination;

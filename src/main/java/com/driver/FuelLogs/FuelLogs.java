@@ -1,5 +1,6 @@
 package com.driver.FuelLogs;
 
+//looks the same as trip log but with different variable names, fuel specific, could have made a parent class but wanted to keep it simple and straightforward for now
 public class FuelLogs {
     private String date;
     private int startMileage;
