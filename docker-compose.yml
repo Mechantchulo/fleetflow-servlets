@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:18
+    container_name: fleetflow-servlets-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fleetflow}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fleetflow2026}
+    ports:
+      - "${LOCAL_DB_PORT:-5435}:5432"
+    volumes:
+      - fleetflow_servlets_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-fleetflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - localdb
+
+volumes:
+  fleetflow_servlets_pgdata:
