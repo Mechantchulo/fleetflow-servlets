@@ -1,0 +1,21 @@
+.env
+
+# Maven / Java build output
+target/
+*.war
+*.jar
+*.ear
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# VS Code local settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
