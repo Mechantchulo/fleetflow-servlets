@@ -1,10 +1,5 @@
 package com.auth;
 
-// import com.transportmanager.util.DeanSessionUtil;
-// import com.transportmanager.util.ManagerSessionUtil;
-// import com.staff.servletss.StaffDashboardServlet;
-// import com.driver.driverdashboard.DriverDashboardServlet;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,26 +9,12 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
-@WebServlet("/login")
+@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
-
-    // Demo credentials
-    private static final String DEAN_USER = "dean";
-    private static final String DEAN_PASS = "dean123";
-
-    private static final String MANAGER_USER = "manager";
-    private static final String MANAGER_PASS = "manager123";
-
-    private static final String STAFF_USER = "staff";
-    private static final String STAFF_PASS = "staff123";
-
-    private static final String DRIVER_USER = "driver";
-    private static final String DRIVER_PASS = "driver123";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Show login page
         request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
 
@@ -50,44 +31,42 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
+        // Create a new session for the user
         HttpSession session = request.getSession(true);
+        session.setMaxInactiveInterval(30 * 60); // 30 minutes timeout
+        session.setAttribute("username", username);
 
-        // Role-based authentication
-        if (DEAN_USER.equals(username) && DEAN_PASS.equals(password)) {
+        // --- ROLE-BASED ROUTING ---
+        // We are using clean, standardized URLs for every role's dashboard.
+
+        if ("dean".equals(username) && "dean123".equals(password)) {
             session.setAttribute("userRole", "DEAN");
-            session.setAttribute("username", username);
-            session.setMaxInactiveInterval(30 * 60);
             response.sendRedirect(request.getContextPath() + "/dean/dashboard");
             return;
         }
 
-        if (MANAGER_USER.equals(username) && MANAGER_PASS.equals(password)) {
+        if ("manager".equals(username) && "manager123".equals(password)) {
             session.setAttribute("userRole", "TRANSPORT_MANAGER");
-            session.setAttribute("username", username);
-            session.setMaxInactiveInterval(30 * 60);
-            response.sendRedirect(request.getContextPath() + "/manager/trips/pending");
+            response.sendRedirect(request.getContextPath() + "/manager/dashboard");
             return;
         }
 
-        if (STAFF_USER.equals(username) && STAFF_PASS.equals(password)) {
+        if ("staff".equals(username) && "staff123".equals(password)) {
             session.setAttribute("userRole", "STAFF");
-            session.setAttribute("username", username);
-            session.setMaxInactiveInterval(30 * 60);
-            response.sendRedirect(request.getContextPath() + "/dashboard"); // StaffDashboardServlet
+            response.sendRedirect(request.getContextPath() + "/staff/dashboard");
             return;
         }
 
-        if (DRIVER_USER.equals(username) && DRIVER_PASS.equals(password)) {
+        if ("driver".equals(username) && "driver123".equals(password)) {
             session.setAttribute("userRole", "DRIVER");
-            session.setAttribute("username", username);
-            session.setMaxInactiveInterval(30 * 60);
-            response.sendRedirect(request.getContextPath() + "/driver/dashboard"); // DriverDashboardServlet
+            response.sendRedirect(request.getContextPath() + "/driver/dashboard");
             return;
         }
 
-        // Invalid credentials
+        // If we get here, credentials failed
+        session.invalidate(); // Destroy the session we just made
         request.setAttribute("error", "Invalid credentials. Try again.");
-        request.setAttribute("username", username);
+        request.setAttribute("username", username); // Keep username in the box so they don't have to retype it
         request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
 
