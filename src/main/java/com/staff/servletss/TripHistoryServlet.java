@@ -1,5 +1,6 @@
 package com.staff.servletss;
 
+import com.staff.model.Trip;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,34 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class Trip {
-    private int id;
-    private String date;
-    private String driver;
-    private String initials;
-    private String route;
-    private String duration;
-    private String status;
-
-    public Trip(int id, String date, String driver, String initials, String route, String duration, String status) {
-        this.id = id;
-        this.date = date;
-        this.driver = driver;
-        this.initials = initials;
-        this.route = route;
-        this.duration = duration;
-        this.status = status;
-    }
-
-    public int getId() { return id; }
-    public String getDate() { return date; }
-    public String getDriver() { return driver; }
-    public String getInitials() { return initials; }
-    public String getRoute() { return route; }
-    public String getDuration() { return duration; }
-    public String getStatus() { return status; }
-}
-
 @WebServlet("/staff/TripHistory")
 public class TripHistoryServlet extends HttpServlet {
 
@@ -48,9 +21,13 @@ public class TripHistoryServlet extends HttpServlet {
     @Override
     public void init() {
         // Sample data (runs once when server starts)
-        trips.add(new Trip(1, "2026-04-01", "John Doe", "JD", "Nairobi → Nakuru", "3h", "Completed"));
-        trips.add(new Trip(2, "2026-04-02", "Jane Smith", "JS", "Nairobi → Mombasa", "8h", "Cancelled"));
-        trips.add(new Trip(3, "2026-04-03", "Mike Lee", "ML", "Nairobi → Kisumu", "6h", "Completed"));
+        if (!trips.isEmpty()) {
+            return;
+        }
+
+        trips.add(new Trip(1, "2026-04-01", "John Doe", "JD", "Nairobi - Nakuru", "3h", "Completed"));
+        trips.add(new Trip(2, "2026-04-02", "Jane Smith", "JS", "Nairobi - Mombasa", "8h", "Cancelled"));
+        trips.add(new Trip(3, "2026-04-03", "Mike Lee", "ML", "Nairobi - Kisumu", "6h", "Completed"));
     }
 
     @Override
