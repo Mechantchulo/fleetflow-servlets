@@ -41,7 +41,7 @@ public class StaffDashboardServlet extends HttpServlet {
         request.setAttribute("requests", requests);
 
         // 3. SECURE JSP PATH: Forwarding into the WEB-INF folder
-        request.getRequestDispatcher("/WEB-INF/staff/dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/staff/staffDashboard.jsp").forward(request, response);
     }
 
     // Handle form submission (New Bus Request)

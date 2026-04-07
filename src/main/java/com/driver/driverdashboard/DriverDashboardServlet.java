@@ -38,7 +38,7 @@ public class DriverDashboardServlet extends HttpServlet {
         request.setAttribute("trips", trips);
 
         // 4. FORWARD TO JSP: No more PrintWriter!
-        request.getRequestDispatcher("/WEB-INF/driver/dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/driver/driverDashboard.jsp").forward(request, response);
     }
 
     @Override

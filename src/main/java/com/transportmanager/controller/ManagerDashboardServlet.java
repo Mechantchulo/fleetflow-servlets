@@ -19,7 +19,7 @@ import java.util.List;
 @WebServlet(name = "ManagerDashboardServlet", urlPatterns = {"/manager/dashboard"})
 public class ManagerDashboardServlet extends HttpServlet {
     
-    private static final String PENDING_TRIPS_JSP = "/WEB-INF/manager/pendingTripQueue.jsp";
+    private static final String PENDING_TRIPS_JSP = "/WEB-INF/manager/managerDashboard.jsp";
 
     // DAO Means a Data Access Object - responsible for communicating with db
     private transient TripDAO tripDAO;
