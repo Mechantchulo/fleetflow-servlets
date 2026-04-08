@@ -2,7 +2,6 @@ package com.transportmanager.controller;
 
 import com.transportmanager.dao.TripDAO;
 import com.transportmanager.model.Trip;
-import com.transportmanager.util.DeanSessionUtil;
 import com.transportmanager.util.DbUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,24 +15,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-// import java.time.LocalDate;
-// import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-
-@WebServlet(name = "DeanServlet", urlPatterns = {"/dean/dashboard"})
-public class DeanServlet extends HttpServlet {
+@WebServlet(name = "DeanDashboardServlet", urlPatterns = {"/dean/dashboard"})
+public class DeanDashboardServlet extends HttpServlet {
 
     private static final String DEAN_DASHBOARD_JSP = "/WEB-INF/dean/deanDashboard.jsp";
-    private static final String DEAN_ROLE = "DEAN";
-
-    // Temporary credentials for learning/demo purposes.
-    // Replace with DAO/service validation against a real users table.
-    private static final String DEMO_USERNAME = "dean";
-    private static final String DEMO_PASSWORD = "dean123";
 
     private transient TripDAO tripDAO;
 
@@ -45,9 +34,11 @@ public class DeanServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        // Authorization check: only dean can access this endpoint.
-        if (!DeanSessionUtil.isDeanLoggedIn(request)) {
-            DeanSessionUtil.redirectToLogin(request, response);
+        // 1. CENTRALIZED SECURITY CHECK
+        // We explicitly check the session here and bounce unauthorized users to the shared front door.
+        HttpSession session = request.getSession(false);
+        if (session == null || !"DEAN".equals(session.getAttribute("userRole"))) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
@@ -65,49 +56,14 @@ public class DeanServlet extends HttpServlet {
             request.setAttribute("fleetUtilization", fleetUtilization);
 
         } catch (Exception ex) {
-            response.sendError(SC_INTERNAL_SERVER_ERROR, "Failed to load dashboard data.");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to load dashboard data.");
             return;
         }
 
         request.getRequestDispatcher(DEAN_DASHBOARD_JSP).forward(request, response);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        // Handle login form submission
-        String username = trimToEmpty(request.getParameter("username"));
-        String password = trimToEmpty(request.getParameter("password"));
-
-        if (username.isEmpty() || password.isEmpty()) {
-            request.setAttribute("error", "Username and password are required.");
-            request.setAttribute("username", username);
-            request.getRequestDispatcher(DEAN_DASHBOARD_JSP).forward(request, response);
-            return;
-        }
-
-        if (!isValidDeanCredentials(username, password)) {
-            request.setAttribute("error", "Invalid credentials. Try again.");
-            request.setAttribute("username", username);
-            request.getRequestDispatcher(DEAN_DASHBOARD_JSP).forward(request, response);
-            return;
-        }
-
-        HttpSession session = request.getSession(true);
-        session.setAttribute("userRole", DEAN_ROLE);
-        session.setAttribute("deanUsername", username);
-        session.setMaxInactiveInterval(30 * 60);
-
-        // Redirect to dashboard after successful login
-        response.sendRedirect(request.getContextPath() + "/dean/dashboard");
-    }
-
-    private boolean isValidDeanCredentials(String username, String password) {
-        return DEMO_USERNAME.equals(username) && DEMO_PASSWORD.equals(password);
-    }
-
-    private String trimToEmpty(String value) {
-        return value == null ? "" : value.trim();
-    }
+    // --- We removed the doPost() and authentication methods from here ---
 
     private Map<String, Object> getDashboardStatistics() {
         Map<String, Object> stats = new HashMap<>();
@@ -137,7 +93,6 @@ public class DeanServlet extends HttpServlet {
                 stats.put("pendingPassengers", rs.getInt("pending_passengers"));
             }
         } catch (SQLException ex) {
-            // Return empty stats on error
             stats.put("pendingTrips", 0);
             stats.put("approvedTrips", 0);
             stats.put("rejectedTrips", 0);
@@ -179,7 +134,6 @@ public class DeanServlet extends HttpServlet {
                 utilization.put("assignedDrivers", rs.getInt("assigned_drivers"));
             }
         } catch (SQLException ex) {
-            // Return empty utilization on error
             utilization.put("totalVehicles", 0);
             utilization.put("availableVehicles", 0);
             utilization.put("assignedVehicles", 0);

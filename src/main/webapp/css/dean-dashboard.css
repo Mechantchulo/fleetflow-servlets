@@ -1,0 +1,7 @@
+/* FleetFlow — Dean Dashboard
+   Imports all shared styles from dashboard-base.css
+   Add dean-specific overrides below if needed.      */
+@import url('dashboard-base.css');
+
+/* Dean has no unique overrides currently.
+   Add any dean-specific styles here as the page grows. */

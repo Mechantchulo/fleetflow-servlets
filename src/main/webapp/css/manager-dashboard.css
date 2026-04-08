@@ -1,0 +1,71 @@
+/* FleetFlow — Manager Dashboard
+   Imports all shared styles from dashboard-base.css  */
+@import url('dashboard-base.css');
+
+/* Manager-specific: pending trip queue table tweaks */
+.note-field {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: .82rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 58px;
+    outline: none;
+    transition: border-color .2s;
+}
+
+.note-field:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-light);
+}
+
+/* Approve / Reject inline buttons */
+.btn-approve {
+    background: var(--status-approved);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 13px;
+    font-size: .78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-approve:hover { background: #059669; }
+
+.btn-reject {
+    background: var(--status-rejected);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 13px;
+    font-size: .78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-reject:hover { background: #dc2626; }
+
+.btn-allocate-sm {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 1px solid #a7f3d0;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: .78rem;
+    font-weight: 700;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 6px;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-allocate-sm:hover { background: #d1fae5; }
