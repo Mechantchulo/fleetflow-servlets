@@ -1,43 +1,42 @@
 package com.staff.servletss;
 
+import com.staff.dao.StaffTripDAO;
 import com.staff.model.Trip;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@WebServlet("/staff/TripHistory")
+@WebServlet(urlPatterns = {"/staff/TripHistory", "/staff/trip-history"})
 public class TripHistoryServlet extends HttpServlet {
 
-    // Simulated database
-    private static List<Trip> trips = new ArrayList<>();
+    private transient StaffTripDAO staffTripDAO;
 
     @Override
     public void init() {
-        // Sample data (runs once when server starts)
-        if (!trips.isEmpty()) {
-            return;
-        }
-
-        trips.add(new Trip(1, "2026-04-01", "John Doe", "JD", "Nairobi - Nakuru", "3h", "Completed"));
-        trips.add(new Trip(2, "2026-04-02", "Jane Smith", "JS", "Nairobi - Mombasa", "8h", "Cancelled"));
-        trips.add(new Trip(3, "2026-04-03", "Mike Lee", "ML", "Nairobi - Kisumu", "6h", "Completed"));
+        this.staffTripDAO = new StaffTripDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        HttpSession session = request.getSession(false);
+        if (session == null || !"STAFF".equals(session.getAttribute("userRole"))) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        String staffUsername = String.valueOf(session.getAttribute("username"));
         String tab = request.getParameter("tab");      // all, completed, cancelled
         String search = request.getParameter("search"); // search query
 
-        List<Trip> filteredTrips = new ArrayList<>(trips);
+        List<Trip> trips = staffTripDAO.findTripHistoryByStaff(staffUsername);
+        List<Trip> filteredTrips = trips;
 
         // 🔍 Filter by tab
         if (tab != null && !tab.equals("all")) {
@@ -73,7 +72,7 @@ public class TripHistoryServlet extends HttpServlet {
         request.setAttribute("completedCount", completedCount);
         request.setAttribute("cancelledCount", cancelledCount);
 
-        request.getRequestDispatcher("/staff/TripHistory.jsp")
+        request.getRequestDispatcher("/WEB-INF/staff/TripHistory.jsp")
                .forward(request, response);
     }
 }

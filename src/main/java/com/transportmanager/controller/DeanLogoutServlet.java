@@ -18,7 +18,7 @@ public class DeanLogoutServlet extends HttpServlet {
 			session.invalidate();
 		}
 
-		response.sendRedirect(request.getContextPath() + "/dean/dashboard?loggedOut=1");
+		response.sendRedirect(request.getContextPath() + "/login?loggedOut=1");
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package com.transportmanager.controller;
 
+import com.auth.AuthDAO;
+import com.auth.AuthUser;
 import com.transportmanager.util.ManagerSessionUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,13 +15,14 @@ import java.io.IOException;
 @WebServlet(name = "ManagerLoginServlet", urlPatterns = {"/manager/login"})
 public class ManagerLoginServlet extends HttpServlet {
 
-	private static final String LOGIN_JSP = "/WEB-INF/manager/managerLogin.jsp";
 	private static final String MANAGER_ROLE = "TRANSPORT_MANAGER";
+	private transient AuthDAO authDAO;
 
-	// Temporary credentials for learning/demo purposes.
-	// Replace with DAO/service validation against a real users table.
-	private static final String DEMO_USERNAME = "manager";
-	private static final String DEMO_PASSWORD = "manager123";
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		this.authDAO = new AuthDAO();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
@@ -27,8 +30,7 @@ public class ManagerLoginServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/manager/trips/pending");
 			return;
 		}
-
-		request.getRequestDispatcher(LOGIN_JSP).forward(request, response);
+		response.sendRedirect(request.getContextPath() + "/login");
 	}
 
 	@Override
@@ -37,32 +39,28 @@ public class ManagerLoginServlet extends HttpServlet {
 		String password = trimToEmpty(request.getParameter("password"));
 
 		if (username.isEmpty() || password.isEmpty()) {
-			request.setAttribute("error", "Username and password are required.");
-			request.getRequestDispatcher(LOGIN_JSP).forward(request, response);
+			response.sendRedirect(request.getContextPath() + "/login");
 			return;
 		}
 
-		if (!isValidManagerCredentials(username, password)) {
-			request.setAttribute("error", "Invalid credentials. Try again.");
-			request.setAttribute("username", username);
-			request.getRequestDispatcher(LOGIN_JSP).forward(request, response);
+		AuthUser user = authDAO.authenticate(username.toLowerCase(), password);
+		if (user == null || !MANAGER_ROLE.equalsIgnoreCase(user.getRole())) {
+			response.sendRedirect(request.getContextPath() + "/login");
 			return;
 		}
+		authDAO.markSuccessfulLogin(user.getId());
 
 		HttpSession session = request.getSession(true);
 		session.setAttribute("userRole", MANAGER_ROLE);
-		session.setAttribute("managerUsername", username);
+		session.setAttribute("username", user.getUsername());
+		session.setAttribute("fullName", user.getFullName());
+		session.setAttribute("managerUsername", user.getUsername());
 		session.setMaxInactiveInterval(30 * 60);
 
 		response.sendRedirect(request.getContextPath() + "/manager/trips/pending");
-	}
-
-	private boolean isValidManagerCredentials(String username, String password) {
-		return DEMO_USERNAME.equals(username) && DEMO_PASSWORD.equals(password);
 	}
 
 	private String trimToEmpty(String value) {
 		return value == null ? "" : value.trim();
 	}
 }
-

@@ -9,11 +9,14 @@ public class FuelLogs {
     private double fuelUsed;
     private String comments;
 
+    public FuelLogs() {
+    }
+
     public FuelLogs(String date, int startMileage, int endMileage, double fuelUsed, String comments) {
         this.date = date;
         this.startMileage = startMileage;
         this.endMileage = endMileage;
-        this.distance = endMileage - startMileage; // auto-calculate
+        this.distance = endMileage - startMileage;
         this.fuelUsed = fuelUsed;
         this.comments = comments;
     }
@@ -41,5 +44,35 @@ public class FuelLogs {
 
     public String getComments() {
         return comments;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setStartMileage(int startMileage) {
+        this.startMileage = startMileage;
+        recalculateDistance();
+    }
+
+    public void setEndMileage(int endMileage) {
+        this.endMileage = endMileage;
+        recalculateDistance();
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
+    public void setFuelUsed(double fuelUsed) {
+        this.fuelUsed = fuelUsed;
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
+    }
+
+    private void recalculateDistance() {
+        this.distance = this.endMileage - this.startMileage;
     }
 }

@@ -8,6 +8,9 @@ public class Trip {
     private String date;
     private int passengers;
 
+    public Trip() {
+    }
+
     public Trip(String id, String destination, String date, int passengers) {
         this.id = id;
         this.destination = destination;
@@ -29,5 +32,21 @@ public class Trip {
 
     public int getPassengers() {
         return passengers;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setPassengers(int passengers) {
+        this.passengers = passengers;
     }
 }

@@ -54,7 +54,7 @@ public class TripDecisionServlet extends HttpServlet {
 			return;
 		}
 
-		response.sendRedirect(request.getContextPath() + "/manager/trips/pending?success=decisionSaved");
+		response.sendRedirect(request.getContextPath() + "/manager/trips/pending?success=decisionSaved:" + action.toLowerCase());
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class TripDecisionServlet extends HttpServlet {
 		}
 
 		String value = raw.trim().toUpperCase();
-		if ("APPROVE".equals(value) || "REJECT".equals(value)) {
+		if ("APPROVE".equals(value) || "REJECT".equals(value) || "CONFIRM".equals(value)) {
 			return value;
 		}
 		return null;
@@ -95,4 +95,3 @@ public class TripDecisionServlet extends HttpServlet {
 		return value.isEmpty() ? null : value;
 	}
 }
-

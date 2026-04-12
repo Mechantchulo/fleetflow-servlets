@@ -1,23 +1,22 @@
 /* ============================================
-   FleetFlow — Shared Dashboard Base
-   Used by: dean, manager, staff, driver pages
+   ATMS — Shared Dashboard Base
+   Used by: dean, manager, staff, driver, reports
    ============================================ */
 
 :root {
-    /* Core palette */
-    --green:         #2ecc71;
-    --green-dark:    #27ae60;
-    --green-light:   #eafaf1;
-    --sidebar-bg:    #111827;
-    --sidebar-text:  #9ca3af;
-    --sidebar-hover: #1e293b;
-    --bg:            #f4f7fb;
-    --white:         #ffffff;
-    --text:          #111827;
-    --text-secondary:#374151;
-    --muted:         #6b7280;
-    --border:        #e5e7eb;
-    --border-light:  #f3f4f6;
+    --green:         #0d9d94;
+    --green-dark:    #0a877f;
+    --green-light:   #ddf7f2;
+    --sidebar-bg:    rgba(5, 24, 43, 0.76);
+    --sidebar-text:  #c9d8ea;
+    --sidebar-hover: rgba(20, 64, 100, 0.55);
+    --bg:            #eaf2f7;
+    --white:         rgba(244, 250, 253, 0.9);
+    --text:          #111f3f;
+    --text-secondary:#324c70;
+    --muted:         #5e7597;
+    --border:        #bfd3e2;
+    --border-light:  #dce8f1;
 
     /* Status colours — used for badges */
     --status-pending:  #f59e0b;
@@ -37,8 +36,10 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
+    font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+    background:
+      linear-gradient(135deg, rgba(7, 35, 61, 0.58), rgba(8, 32, 53, 0.35)),
+      url('https://www.egerton.ac.ke/images/speasyimagegallery/albums/1/images/45a-egerton-gate2hd.jpg') center/cover fixed no-repeat;
     color: var(--text);
     font-size: 15px;
     line-height: 1.5;
@@ -49,6 +50,7 @@ body {
     display: flex;
     height: 100vh;
     overflow: hidden;
+    backdrop-filter: blur(2px);
 }
 
 /* ── Sidebar ── */
@@ -59,6 +61,7 @@ body {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    border-right: 1px solid rgba(171, 201, 224, 0.28);
 }
 
 .sidebar-header {
@@ -66,19 +69,21 @@ body {
     align-items: center;
     gap: 12px;
     padding: 28px 24px 32px;
-    color: #fff;
+    color: #eff7ff;
 }
 
 .logo-icon {
     width: 34px;
     height: 34px;
-    background: var(--green);
-    border-radius: 8px;
+    background: rgba(13, 157, 148, 0.18);
+    border: 1px solid rgba(130, 233, 224, 0.55);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
     flex-shrink: 0;
+    color: #90f4e5;
 }
 
 .sidebar-header h2 {
@@ -149,11 +154,12 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: rgba(239, 247, 252, 0.75);
 }
 
 /* ── Top header ── */
 .top-header {
-    background: var(--white);
+    background: rgba(236, 245, 251, 0.88);
     border-bottom: 1px solid var(--border);
     padding: 20px 36px;
     display: flex;
@@ -178,7 +184,7 @@ body {
 .profile-avatar {
     width: 38px;
     height: 38px;
-    background: var(--tint-green);
+    background: #d6f9f4;
     color: var(--green-dark);
     border-radius: 50%;
     display: flex;
@@ -258,7 +264,7 @@ body {
     background: var(--white);
     border-radius: 12px;
     border: 1px solid var(--border-light);
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    box-shadow: 0 10px 26px rgba(8, 25, 46, 0.12);
     overflow: hidden;
 }
 
@@ -492,7 +498,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 }
 
 .action-card {
-    background: var(--white);
+    background: rgba(247, 251, 254, 0.92);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     padding: 24px 20px;
@@ -506,7 +512,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 }
 
 .action-card:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,.1);
+    box-shadow: 0 14px 26px rgba(4, 23, 47, 0.17);
     border-color: var(--green);
     transform: translateY(-2px);
 }
@@ -591,7 +597,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 
 /* ── Table card (dean recent trips) ── */
 .table-card {
-    background: var(--white);
+    background: rgba(247, 251, 254, 0.93);
     border-radius: 12px;
     border: 1px solid var(--border-light);
     box-shadow: 0 1px 4px rgba(0,0,0,.06);

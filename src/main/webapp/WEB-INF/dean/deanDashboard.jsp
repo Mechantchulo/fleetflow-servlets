@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dean Dashboard - FleetFlow</title>
+    <title>Dean Dashboard - ATMS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dean-dashboard.css">
@@ -17,7 +17,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo-icon"><i class="fas fa-bus"></i></div>
-                <h2>FleetFlow</h2>
+                <h2>ATMS</h2>
             </div>
             
             <ul class="sidebar-menu">
@@ -30,7 +30,7 @@
             </ul>
 
             <div class="sidebar-footer">
-                <a href="${pageContext.request.contextPath}/login" class="logout-btn"> <i class="fas fa-sign-out-alt"></i>
+                <a href="${pageContext.request.contextPath}/dean/logout" class="logout-btn"> <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
             </div>
@@ -50,6 +50,9 @@
             </header>
 
             <div class="dashboard-content">
+                <div class="filter-actions" style="justify-content:flex-end;margin-bottom:16px;">
+                    <a class="btn btn-outline" href="${pageContext.request.contextPath}/dean/reports/pdf">Export Dean PDF</a>
+                </div>
                 
                 <section class="stats-grid">
                     <div class="stat-card">
@@ -156,7 +159,7 @@
                             <tbody>
                                 <% for (Trip trip : recentTrips) { %>
                                 <tr>
-                                    <td class="fw-600">#${trip.id}</td>
+                                    <td class="fw-600">${trip.id}</td>
                                     <td>${trip.destination}</td>
                                     <td>${trip.requesterName}</td>
                                     <td>${trip.passengerCount}</td>

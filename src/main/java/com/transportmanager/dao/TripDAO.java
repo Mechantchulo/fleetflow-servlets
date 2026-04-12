@@ -27,13 +27,14 @@ public class TripDAO {
 		String sql = """
 			SELECT tr.id,
 			       tr.destination,
+			       tr.requesting_department,
 			       tr.departure_time,
 			       tr.passenger_count,
 			       tr.status,
 			       u.full_name AS requester_name
 			FROM trip_request tr
 			LEFT JOIN users u ON u.id = tr.requester_id
-			WHERE tr.status = 'PENDING'
+			WHERE tr.status IN ('PENDING', 'APPROVED', 'CONFIRMED')
 			  AND (? IS NULL OR DATE(tr.departure_time) >= ?)
 			  AND (? IS NULL OR DATE(tr.departure_time) <= ?)
 			ORDER BY tr.departure_time ASC NULLS LAST
@@ -53,6 +54,7 @@ public class TripDAO {
 					Trip trip = new Trip();
 					trip.setId(rs.getLong("id"));
 					trip.setDestination(rs.getString("destination"));
+					trip.setDepartment(rs.getString("requesting_department"));
 					trip.setRequesterName(rs.getString("requester_name"));
 
 					Timestamp departure = rs.getTimestamp("departure_time");
@@ -81,6 +83,28 @@ public class TripDAO {
 		return filtered;
 	}
 
+	public boolean isChangeWindowOpen(long tripId, int minimumDaysBeforeDeparture) {
+		String sql = """
+			SELECT DATE(departure_time) >= (CURRENT_DATE + ?)
+			FROM trip_request
+			WHERE id = ?
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, Math.max(0, minimumDaysBeforeDeparture));
+			statement.setLong(2, tripId);
+			try (ResultSet rs = statement.executeQuery()) {
+				if (!rs.next()) {
+					return false;
+				}
+				return rs.getBoolean(1);
+			}
+		} catch (SQLException ex) {
+			return false;
+		}
+	}
+
 	public boolean updateTripDecision(long tripId, String action, String managerNote, String managerUsername) {
 		String sql = """
 			UPDATE trip_request
@@ -105,6 +129,7 @@ public class TripDAO {
 		String sql = """
 			SELECT tr.id,
 			       tr.destination,
+			       tr.requesting_department,
 			       tr.departure_time,
 			       tr.passenger_count,
 			       tr.status,
@@ -125,6 +150,7 @@ public class TripDAO {
 				Trip trip = new Trip();
 				trip.setId(rs.getLong("id"));
 				trip.setDestination(rs.getString("destination"));
+				trip.setDepartment(rs.getString("requesting_department"));
 				trip.setRequesterName(rs.getString("requester_name"));
 				Timestamp departure = rs.getTimestamp("departure_time");
 				trip.setDepartureDate(departure == null ? null : departure.toLocalDateTime().toLocalDate());
@@ -299,6 +325,11 @@ public class TripDAO {
 	}
 
 	public boolean applyManualOverride(long tripId, String overrideType, long targetId, String reason, String managerUsername) {
+		Long managerId = findUserIdByEmailOrName(managerUsername);
+		if (managerId == null) {
+			return false;
+		}
+
 		String sql = """
 			WITH latest AS (
 			    SELECT id FROM trip_assignment
@@ -309,6 +340,8 @@ public class TripDAO {
 			UPDATE trip_assignment ta
 			SET override_used = TRUE,
 			    override_reason = ?,
+			    assigned_by_id = ?,
+			    assigned_at = COALESCE(assigned_at, NOW()),
 			    updated_at = NOW()
 			FROM latest
 			WHERE ta.id = latest.id
@@ -318,10 +351,264 @@ public class TripDAO {
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setLong(1, tripId);
 			statement.setString(2, reason);
+			statement.setLong(3, managerId);
 			return statement.executeUpdate() > 0;
 		} catch (SQLException ex) {
 			return false;
 		}
+	}
+
+	public Map<String, Object> getManagerReportSummary(LocalDate startDate, LocalDate endDate) {
+		Map<String, Object> summary = new HashMap<>();
+		LocalDate safeStart = startDate == null ? LocalDate.now().withDayOfMonth(1) : startDate;
+		LocalDate safeEnd = endDate == null ? LocalDate.now() : endDate;
+
+		String tripSql = """
+			SELECT COUNT(*) AS total_requests,
+			       COUNT(*) FILTER (WHERE status = 'ASSIGNED') AS assigned_requests,
+			       COUNT(*) FILTER (WHERE status IN ('PENDING', 'APPROVED', 'CONFIRMED')) AS open_requests,
+			       COUNT(*) FILTER (WHERE status = 'REJECTED') AS rejected_requests,
+			       COALESCE(SUM(passenger_count), 0) AS total_passengers
+			FROM trip_request
+			WHERE DATE(COALESCE(updated_at, created_at)) BETWEEN ? AND ?
+		""";
+
+		String allocationSql = """
+			SELECT COUNT(*) AS total_allocations,
+			       COUNT(*) FILTER (WHERE override_used = TRUE) AS override_allocations
+			FROM trip_assignment
+			WHERE DATE(COALESCE(assigned_at, created_at)) BETWEEN ? AND ?
+		""";
+
+		try (Connection connection = DbUtil.getConnection()) {
+			try (PreparedStatement statement = connection.prepareStatement(tripSql)) {
+				statement.setDate(1, Date.valueOf(safeStart));
+				statement.setDate(2, Date.valueOf(safeEnd));
+				try (ResultSet rs = statement.executeQuery()) {
+					if (rs.next()) {
+						summary.put("totalRequests", rs.getInt("total_requests"));
+						summary.put("assignedRequests", rs.getInt("assigned_requests"));
+						summary.put("openRequests", rs.getInt("open_requests"));
+						summary.put("rejectedRequests", rs.getInt("rejected_requests"));
+						summary.put("totalPassengers", rs.getInt("total_passengers"));
+					}
+				}
+			}
+
+			try (PreparedStatement statement = connection.prepareStatement(allocationSql)) {
+				statement.setDate(1, Date.valueOf(safeStart));
+				statement.setDate(2, Date.valueOf(safeEnd));
+				try (ResultSet rs = statement.executeQuery()) {
+					if (rs.next()) {
+						summary.put("totalAllocations", rs.getInt("total_allocations"));
+						summary.put("overrideAllocations", rs.getInt("override_allocations"));
+					}
+				}
+			}
+		} catch (SQLException ex) {
+			return Collections.emptyMap();
+		}
+
+		summary.putIfAbsent("totalRequests", 0);
+		summary.putIfAbsent("assignedRequests", 0);
+		summary.putIfAbsent("openRequests", 0);
+		summary.putIfAbsent("rejectedRequests", 0);
+		summary.putIfAbsent("totalPassengers", 0);
+		summary.putIfAbsent("totalAllocations", 0);
+		summary.putIfAbsent("overrideAllocations", 0);
+		return summary;
+	}
+
+	public Map<String, Object> getDriverReportSummary(LocalDate startDate, LocalDate endDate, String driverIdentity) {
+		Map<String, Object> summary = new HashMap<>();
+		LocalDate safeStart = startDate == null ? LocalDate.now().withDayOfMonth(1) : startDate;
+		LocalDate safeEnd = endDate == null ? LocalDate.now() : endDate;
+		Long driverId = findDriverIdByIdentity(driverIdentity);
+
+		String sql = """
+			SELECT COUNT(*) AS total_assigned_trips,
+			       COUNT(*) FILTER (WHERE ta.status = 'ASSIGNED') AS active_assignments,
+			       COUNT(*) FILTER (WHERE ta.override_used = TRUE) AS overridden_assignments,
+			       COALESCE(SUM(tr.passenger_count), 0) AS passengers_handled
+			FROM trip_assignment ta
+			INNER JOIN trip_request tr ON tr.id = ta.trip_request_id
+			WHERE DATE(COALESCE(ta.assigned_at, ta.created_at)) BETWEEN ? AND ?
+			  AND (? IS NULL OR ta.driver_id = ?)
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setDate(1, Date.valueOf(safeStart));
+			statement.setDate(2, Date.valueOf(safeEnd));
+			if (driverId == null) {
+				statement.setNull(3, java.sql.Types.BIGINT);
+				statement.setNull(4, java.sql.Types.BIGINT);
+			} else {
+				statement.setLong(3, driverId);
+				statement.setLong(4, driverId);
+			}
+
+			try (ResultSet rs = statement.executeQuery()) {
+				if (rs.next()) {
+					summary.put("totalAssignedTrips", rs.getInt("total_assigned_trips"));
+					summary.put("activeAssignments", rs.getInt("active_assignments"));
+					summary.put("overriddenAssignments", rs.getInt("overridden_assignments"));
+					summary.put("passengersHandled", rs.getInt("passengers_handled"));
+				}
+			}
+		} catch (SQLException ex) {
+			return Collections.emptyMap();
+		}
+
+		summary.putIfAbsent("totalAssignedTrips", 0);
+		summary.putIfAbsent("activeAssignments", 0);
+		summary.putIfAbsent("overriddenAssignments", 0);
+		summary.putIfAbsent("passengersHandled", 0);
+		summary.put("driverScope", driverId == null ? "ALL_DRIVERS" : "CURRENT_DRIVER");
+		return summary;
+	}
+
+	public List<Trip> findRequestsForTimetabling(int limit) {
+		List<Trip> trips = new ArrayList<>();
+		String sql = """
+			SELECT tr.id,
+			       tr.destination,
+			       tr.requesting_department,
+			       tr.departure_time,
+			       tr.passenger_count,
+			       tr.planned_budget,
+			       tr.status,
+			       tr.manager_note,
+			       (tr.document_data IS NOT NULL) AS has_scheduling_document,
+			       u.full_name AS requester_name
+			FROM trip_request tr
+			LEFT JOIN users u ON u.id = tr.requester_id
+			WHERE tr.status = 'REQUESTED'
+			ORDER BY tr.created_at ASC
+			LIMIT ?
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, Math.max(1, limit));
+			try (ResultSet rs = statement.executeQuery()) {
+				while (rs.next()) {
+					Trip trip = new Trip();
+					trip.setId(rs.getLong("id"));
+					trip.setDestination(rs.getString("destination"));
+					trip.setDepartment(rs.getString("requesting_department"));
+					trip.setRequesterName(rs.getString("requester_name"));
+					Timestamp departure = rs.getTimestamp("departure_time");
+					trip.setDepartureDate(departure == null ? null : departure.toLocalDateTime().toLocalDate());
+					trip.setPassengerCount(rs.getInt("passenger_count"));
+					trip.setRequestedBudget(rs.getBigDecimal("planned_budget"));
+					trip.setStatus(rs.getString("status"));
+					trip.setRequestNote(rs.getString("manager_note"));
+					trip.setHasSchedulingDocument(rs.getBoolean("has_scheduling_document"));
+					trip.setPriority(derivePriority(trip.getPassengerCount(), null));
+					trips.add(trip);
+				}
+			}
+		} catch (SQLException ex) {
+			return Collections.emptyList();
+		}
+
+		return trips;
+	}
+
+	public Trip findRequestedTripForTimetablingById(long tripId) {
+		if (tripId <= 0) {
+			return null;
+		}
+
+		String sql = """
+			SELECT tr.id,
+			       tr.destination,
+			       tr.requesting_department,
+			       tr.departure_time,
+			       tr.passenger_count,
+			       tr.planned_budget,
+			       tr.status,
+			       tr.manager_note,
+			       (tr.document_data IS NOT NULL) AS has_scheduling_document,
+			       u.full_name AS requester_name
+			FROM trip_request tr
+			LEFT JOIN users u ON u.id = tr.requester_id
+			WHERE tr.id = ?
+			  AND tr.status = 'REQUESTED'
+			LIMIT 1
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setLong(1, tripId);
+			try (ResultSet rs = statement.executeQuery()) {
+				if (!rs.next()) {
+					return null;
+				}
+
+				Trip trip = new Trip();
+				trip.setId(rs.getLong("id"));
+				trip.setDestination(rs.getString("destination"));
+				trip.setDepartment(rs.getString("requesting_department"));
+				trip.setRequesterName(rs.getString("requester_name"));
+				Timestamp departure = rs.getTimestamp("departure_time");
+				trip.setDepartureDate(departure == null ? null : departure.toLocalDateTime().toLocalDate());
+				trip.setPassengerCount(rs.getInt("passenger_count"));
+				trip.setRequestedBudget(rs.getBigDecimal("planned_budget"));
+				trip.setStatus(rs.getString("status"));
+				trip.setRequestNote(rs.getString("manager_note"));
+				trip.setHasSchedulingDocument(rs.getBoolean("has_scheduling_document"));
+				trip.setPriority(derivePriority(trip.getPassengerCount(), null));
+				return trip;
+			}
+		} catch (SQLException ex) {
+			return null;
+		}
+	}
+
+	public List<Trip> findPendingClubTrips(int limit) {
+		List<Trip> trips = new ArrayList<>();
+		String sql = """
+			SELECT tr.id,
+			       tr.destination,
+			       tr.departure_time,
+			       tr.passenger_count,
+			       tr.status,
+			       u.full_name AS requester_name
+			FROM trip_request tr
+			LEFT JOIN users u ON u.id = tr.requester_id
+			WHERE tr.status = 'PENDING'
+			  AND (
+			      COALESCE(tr.manager_note, '') ILIKE '%club%'
+			      OR COALESCE(tr.destination, '') ILIKE 'club:%'
+			  )
+			ORDER BY tr.departure_time ASC NULLS LAST
+			LIMIT ?
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setInt(1, Math.max(1, limit));
+			try (ResultSet rs = statement.executeQuery()) {
+				while (rs.next()) {
+					Trip trip = new Trip();
+					trip.setId(rs.getLong("id"));
+					trip.setDestination(rs.getString("destination"));
+					trip.setRequesterName(rs.getString("requester_name"));
+					Timestamp departure = rs.getTimestamp("departure_time");
+					trip.setDepartureDate(departure == null ? null : departure.toLocalDateTime().toLocalDate());
+					trip.setPassengerCount(rs.getInt("passenger_count"));
+					trip.setStatus(rs.getString("status"));
+					trip.setPriority(derivePriority(trip.getPassengerCount(), null));
+					trips.add(trip);
+				}
+			}
+		} catch (SQLException ex) {
+			return Collections.emptyList();
+		}
+
+		return trips;
 	}
 
 	public Map<String, Object> getAllocationSummary(long tripId) {
@@ -415,18 +702,59 @@ public class TripDAO {
 		if ("REJECT".equals(normalized)) {
 			return "REJECTED";
 		}
+		if ("CONFIRM".equals(normalized)) {
+			return "CONFIRMED";
+		}
 		return normalized;
 	}
 
-	private Long findUserIdByEmailOrName(String username) {
-		if (username == null || username.isBlank()) {
+	private Long findUserIdByEmailOrName(String identity) {
+		if (identity == null || identity.isBlank()) {
 			return null;
 		}
-		String sql = "SELECT id FROM users WHERE email = ? OR full_name = ? LIMIT 1";
+		String normalized = identity.trim();
+		String sql = "SELECT id FROM users WHERE username = ? OR email = ? OR full_name = ? LIMIT 1";
 		try (Connection connection = DbUtil.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, username);
-			statement.setString(2, username);
+			statement.setString(1, normalized.toLowerCase());
+			statement.setString(2, normalized);
+			statement.setString(3, normalized);
+			try (ResultSet rs = statement.executeQuery()) {
+				if (rs.next()) {
+					return rs.getLong("id");
+				}
+			}
+		} catch (SQLException ex) {
+			return null;
+		}
+		return null;
+	}
+
+	private Long findDriverIdByIdentity(String identity) {
+		if (identity == null || identity.isBlank()) {
+			return null;
+		}
+
+		String normalized = identity.trim();
+		try {
+			long parsedId = Long.parseLong(normalized);
+			return parsedId > 0 ? parsedId : null;
+		} catch (NumberFormatException ignore) {
+			// Continue with email/full-name lookup.
+		}
+
+		String sql = """
+			SELECT id
+			FROM users
+			WHERE role = 'DRIVER'
+			  AND (email = ? OR full_name = ?)
+			LIMIT 1
+		""";
+
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setString(1, normalized);
+			statement.setString(2, normalized);
 			try (ResultSet rs = statement.executeQuery()) {
 				if (rs.next()) {
 					return rs.getLong("id");
@@ -438,4 +766,3 @@ public class TripDAO {
 		return null;
 	}
 }
-

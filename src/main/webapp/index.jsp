@@ -4,96 +4,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FleetFlow Transport Management</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ATMS - Transport Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/login-style.css">
 </head>
 <body>
-    <div class="login-container">
-        
-        <div class="login-banner">
-            <div class="banner-content">
-                <div class="logo-circle">
-                    <i class="fas fa-bus"></i>
-                </div>
-                <h1>FleetFlow</h1>
-                <p>Egerton University Transport Management System</p>
-                
-                <div class="features">
-                    <div class="feature-item"><i class="fas fa-check-circle"></i> Centralized Trip Queues</div>
-                    <div class="feature-item"><i class="fas fa-check-circle"></i> Smart Fleet Allocation</div>
-                    <div class="feature-item"><i class="fas fa-check-circle"></i> Real-time Driver Logs</div>
+    <div class="bg-overlay"></div>
+
+    <header class="topbar">
+        <div class="brand-pill">
+            <i class="fas fa-bus"></i>
+            <span>ATMS</span>
+        </div>
+    </header>
+
+    <main class="landing-wrap">
+        <section class="landing-card">
+            <div class="hero-pane">
+                <span class="hero-tag"><i class="far fa-calendar-check"></i> ATMS Transport Platform</span>
+                <h1>Move faster with a transport system built for real operations.</h1>
+                <p>Centralize timetables, confirmations, approvals, dispatch, and reporting in one secure workflow.</p>
+                <div class="hero-actions">
+                    <a class="btn-primary" href="#signin">Sign In <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
-        </div>
 
-        <div class="login-form-section">
-            <div class="form-wrapper">
-                <h2>Welcome Back</h2>
-                <p class="subtitle">Please enter your credentials to continue.</p>
+            <div class="login-pane" id="signin">
+                <h2>Login</h2>
+                <p class="role-hint">Role: preassigned staff account</p>
 
-                <%-- Error Message Alert --%>
                 <% if (request.getAttribute("error") != null) { %>
                     <div class="alert alert-error">
                         <i class="fas fa-exclamation-circle"></i> <%= request.getAttribute("error") %>
                     </div>
                 <% } %>
+
                 <% if (request.getAttribute("logoutMessage") != null) { %>
                     <div class="alert alert-success">
                         <i class="fas fa-check-circle"></i> <%= request.getAttribute("logoutMessage") %>
+                    </div>
+                <% } %>
+                <% if ("staffSuccess".equals(request.getParameter("signup"))) { %>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Staff account created successfully. You can now sign in.
                     </div>
                 <% } %>
 
                 <form action="${pageContext.request.contextPath}/login" method="POST" class="login-form">
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="username" name="username" placeholder="e.g. manager" required autofocus>
-                        </div>
+                        <input type="text" id="username" name="username" placeholder="e.g. manager" required autofocus>
                     </div>
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <div class="password-wrap">
+                            <input type="password" id="password" name="password" placeholder="Enter password" required>
+                            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">
+                                <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-login">Sign In <i class="fas fa-arrow-right"></i></button>
+                    <button type="submit" class="btn-submit">Sign In</button>
                 </form>
 
-                <div class="demo-credentials">
-                    <p><strong>Demo Access:</strong></p>
-                    <div class="demo-grid">
-                        <span><strong>Manager:</strong> manager / manager123</span>
-                        <span><strong>Staff:</strong> staff / staff123</span>
-                        <span><strong>Driver:</strong> driver / driver123</span>
-                        <span><strong>Dean:</strong> dean / dean123</span>
+                <div class="signup-cta">
+                    <a class="btn-signup" href="${pageContext.request.contextPath}/signup/staff">
+                        <i class="fas fa-user-plus"></i> Create Staff Account
+                    </a>
+                </div>
+
+                <div class="access-box">
+                    <p><strong>Preassigned Access</strong></p>
+                    <div class="access-grid">
+                        <span><strong>Manager:</strong> manager / Manager@2026</span>
+                        <span><strong>Staff:</strong> staff / Staff@2026</span>
+                        <span><strong>Driver:</strong> driver / Driver@2026</span>
+                        <span><strong>Dean:</strong> dean / Dean@2026</span>
+                        <span><strong>Timetabling:</strong> timetabling / Timetable@2026</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
+
+    <script>
+        (function () {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('passwordToggle');
+            const icon = document.getElementById('passwordToggleIcon');
+            if (!passwordInput || !toggleButton || !icon) {
+                return;
+            }
+            toggleButton.addEventListener('click', function () {
+                const visible = passwordInput.type === 'text';
+                passwordInput.type = visible ? 'password' : 'text';
+                icon.className = visible ? 'fas fa-eye' : 'fas fa-eye-slash';
+                toggleButton.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+            });
+        })();
+    </script>
 </body>
 </html>
-<!-- <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
-<head>
-    <title>FleetFlow Login</title>
-</head>
-<body>
-<h1>FleetFlow System</h1>
-<form action="login" method="post">
-    Username: <input type="text" name="username" /><br/><br/>
-    Password: <input type="password" name="password" /><br/><br/>
-    <button type="submit">Login</button>
-</form>
-
-<c:if test="${not empty error}">
-    <p style="color:red">${error}</p>
-</c:if>
-</body>
-</html> -->

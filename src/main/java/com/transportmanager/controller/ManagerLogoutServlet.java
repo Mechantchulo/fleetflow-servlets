@@ -18,7 +18,7 @@ public class ManagerLogoutServlet extends HttpServlet {
 			session.invalidate();
 		}
 
-		response.sendRedirect(request.getContextPath() + "/manager/login?loggedOut=1");
+		response.sendRedirect(request.getContextPath() + "/login?loggedOut=1");
 	}
 
 	@Override
@@ -27,4 +27,3 @@ public class ManagerLogoutServlet extends HttpServlet {
 		doPost(request, response);
 	}
 }
-

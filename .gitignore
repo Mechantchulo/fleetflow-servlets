@@ -5,7 +5,7 @@ target/
 *.war
 *.jar
 *.ear
-
+.env
 # IDE files
 .idea/
 *.iml
@@ -15,6 +15,7 @@ target/
 
 # VS Code local settings
 .vscode/
+.codex
 
 # OS files
 .DS_Store

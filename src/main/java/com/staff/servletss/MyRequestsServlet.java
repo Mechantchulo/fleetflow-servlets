@@ -1,43 +1,42 @@
 package com.staff.servletss;
 
+import com.staff.dao.StaffTripDAO;
 import com.staff.model.Request;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @WebServlet("/staff/myRequests") // ⚠️ lowercase m (VERY IMPORTANT)
 public class MyRequestsServlet extends HttpServlet {
 
-    private static List<Request> requests = new ArrayList<>();
+    private transient StaffTripDAO staffTripDAO;
 
     @Override
     public void init() {
-        // Sample data
-        if (!requests.isEmpty()) {
-            return;
-        }
-
-        requests.add(new Request(1, "John Doe", "JD", "Nairobi - Nakuru", "2026-04-01", "Pending"));
-        requests.add(new Request(2, "Jane Smith", "JS", "Nairobi - Mombasa", "2026-04-02", "Approved"));
-        requests.add(new Request(3, "Mike Lee", "ML", "Nairobi - Kisumu", "2026-04-03", "Rejected"));
-        requests.add(new Request(4, "Ann Kim", "AK", "Nairobi - Eldoret", "2026-04-04", "Pending"));
+        this.staffTripDAO = new StaffTripDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        HttpSession session = request.getSession(false);
+        if (session == null || !"STAFF".equals(session.getAttribute("userRole"))) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        String staffUsername = String.valueOf(session.getAttribute("username"));
         String tab = request.getParameter("tab");      // all, pending, approved, rejected
         String search = request.getParameter("search");
 
-        List<Request> filtered = new ArrayList<>(requests);
+        List<Request> requests = staffTripDAO.findRequestsByStaff(staffUsername);
+        List<Request> filtered = requests;
 
         // 🔍 Filter by tab (status)
         if (tab != null && !tab.equals("all")) {
@@ -78,7 +77,7 @@ public class MyRequestsServlet extends HttpServlet {
         request.setAttribute("approvedCount", approvedCount);
         request.setAttribute("rejectedCount", rejectedCount);
 
-        request.getRequestDispatcher("/staff/myRequests.jsp")
+        request.getRequestDispatcher("/WEB-INF/staff/myRequests.jsp")
                .forward(request, response);
     }
 }

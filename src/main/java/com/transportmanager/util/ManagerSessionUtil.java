@@ -27,7 +27,6 @@ public final class ManagerSessionUtil {
 
 	public static void redirectToLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String contextPath = request.getContextPath();
-		response.sendRedirect(contextPath + "/manager/login");
+		response.sendRedirect(contextPath + "/login");
 	}
 }
-

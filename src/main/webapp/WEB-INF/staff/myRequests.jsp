@@ -1,257 +1,151 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>My Requests</title>
-    <style>
-        :root {
-            --bg: #f3efe5;
-            --panel: #fffdf9;
-            --ink: #1f2933;
-            --muted: #677282;
-            --line: #ddd3c3;
-            --accent: #9a3412;
-            --accent-soft: #fce7d6;
-            --pending: #92400e;
-            --approved: #166534;
-            --rejected: #991b1b;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, sans-serif;
-            color: var(--ink);
-            background:
-                linear-gradient(180deg, rgba(154, 52, 18, 0.08), transparent 220px),
-                var(--bg);
-        }
-
-        .page {
-            width: min(1120px, calc(100% - 32px));
-            margin: 28px auto 40px;
-        }
-
-        .hero,
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            box-shadow: 0 14px 36px rgba(31, 41, 51, 0.08);
-        }
-
-        .hero {
-            padding: 24px 28px;
-            margin-bottom: 18px;
-        }
-
-        .hero h1,
-        .panel h2 {
-            margin-top: 0;
-        }
-
-        .muted {
-            color: var(--muted);
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 18px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            border: 1px solid var(--line);
-            color: var(--ink);
-            text-decoration: none;
-            font-weight: 600;
-            background: #fff;
-        }
-
-        .tab.active {
-            border-color: var(--accent);
-            background: var(--accent-soft);
-            color: var(--accent);
-        }
-
-        .search-form {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .search-form input {
-            min-width: min(280px, 100%);
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid var(--line);
-            background: #fff;
-            font: inherit;
-        }
-
-        .search-form button,
-        .search-form a {
-            padding: 10px 14px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            font: inherit;
-        }
-
-        .search-form button {
-            border: 0;
-            background: var(--accent);
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .search-form a {
-            border: 1px solid var(--line);
-            color: var(--ink);
-            background: #fff;
-        }
-
-        .panel {
-            padding: 22px 24px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            text-align: left;
-            padding: 13px 10px;
-            border-bottom: 1px solid var(--line);
-            vertical-align: top;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .badge.pending {
-            background: #ffedd5;
-            color: var(--pending);
-        }
-
-        .badge.approved {
-            background: #dcfce7;
-            color: var(--approved);
-        }
-
-        .badge.rejected {
-            background: #fee2e2;
-            color: var(--rejected);
-        }
-
-        .empty {
-            margin: 0;
-            padding: 18px;
-            border: 1px dashed var(--line);
-            border-radius: 12px;
-            color: var(--muted);
-            background: #fffcf7;
-        }
-    </style>
-</head>
-<body>
+<%@ page import="java.util.List" %>
+<%@ page import="com.staff.model.Request" %>
 <%
     String activeTab = (String) request.getAttribute("activeTab");
     String search = (String) request.getAttribute("search");
-    java.util.List<com.staff.model.Request> requestsList =
-            (java.util.List<com.staff.model.Request>) request.getAttribute("requests");
+    if (activeTab == null) {
+        activeTab = "all";
+    }
+    if (search == null) {
+        search = "";
+    }
+    List<Request> requestsList = (List<Request>) request.getAttribute("requests");
+    if (requestsList == null) {
+        requestsList = java.util.Collections.emptyList();
+    }
 %>
-<div class="page">
-    <section class="hero">
-        <h1>My Requests</h1>
-        <p class="muted">Track every request, filter by status, and search by ID, driver, or destination.</p>
-        <div class="toolbar">
-            <div class="tabs">
-                <a class="tab <%= "all".equalsIgnoreCase(activeTab) ? "active" : "" %>" href="${pageContext.request.contextPath}/staff/myRequests?tab=all">
-                    All
-                </a>
-                <a class="tab <%= "pending".equalsIgnoreCase(activeTab) ? "active" : "" %>" href="${pageContext.request.contextPath}/staff/myRequests?tab=pending">
-                    Pending <span class="muted">(${pendingCount})</span>
-                </a>
-                <a class="tab <%= "approved".equalsIgnoreCase(activeTab) ? "active" : "" %>" href="${pageContext.request.contextPath}/staff/myRequests?tab=approved">
-                    Approved <span class="muted">(${approvedCount})</span>
-                </a>
-                <a class="tab <%= "rejected".equalsIgnoreCase(activeTab) ? "active" : "" %>" href="${pageContext.request.contextPath}/staff/myRequests?tab=rejected">
-                    Rejected <span class="muted">(${rejectedCount})</span>
-                </a>
-            </div>
-            <form class="search-form" method="get" action="${pageContext.request.contextPath}/staff/myRequests">
-                <input type="hidden" name="tab" value="<%= activeTab %>">
-                <input type="search" name="search" value="<%= search %>" placeholder="Search request ID, driver, or destination">
-                <button type="submit">Search</button>
-                <a href="${pageContext.request.contextPath}/staff/myRequests">Reset</a>
-            </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Requests - ATMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/staff-dashboard.css">
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon"><i class="fas fa-bus"></i></div>
+            <h2>ATMS</h2>
         </div>
-    </section>
 
-    <section class="panel">
-        <h2>Request Results</h2>
-        <% if (requestsList == null || requestsList.isEmpty()) { %>
-            <p class="empty">No requests matched the current filters.</p>
-        <% } else { %>
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Date</th>
-                    <th>Driver</th>
-                    <th>Initials</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody>
-                <% for (com.staff.model.Request item : requestsList) { %>
-                    <%
-                        String status = item.getStatus().toLowerCase();
-                    %>
-                    <tr>
-                        <td><%= item.getId() %></td>
-                        <td><%= item.getDate() %></td>
-                        <td><%= item.getDriver() %></td>
-                        <td><%= item.getDriverInitials() %></td>
-                        <td><%= item.getDestination() %></td>
-                        <td><span class="badge <%= status %>"><%= item.getStatus() %></span></td>
-                    </tr>
-                <% } %>
-                </tbody>
-            </table>
-        <% } %>
-    </section>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="${pageContext.request.contextPath}/staff/dashboard"><i class="fas fa-house"></i><span>Dashboard</span></a></li>
+            <li class="menu-item active"><a href="${pageContext.request.contextPath}/staff/myRequests"><i class="fas fa-clipboard-list"></i><span>My Requests</span></a></li>
+            <li class="menu-item"><a href="${pageContext.request.contextPath}/staff/trip-history"><i class="fas fa-clock-rotate-left"></i><span>Trip History</span></a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a href="${pageContext.request.contextPath}/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-title">
+                <h1>My Requests</h1>
+                <p class="subtitle">Track request status and search by ID, driver, or destination</p>
+            </div>
+            <div class="profile-avatar"><i class="fas fa-user"></i></div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="filter-actions" style="justify-content:flex-end;margin-bottom:16px;">
+                <a class="btn btn-outline" href="${pageContext.request.contextPath}/staff/reports/pdf">Export Requests PDF</a>
+            </div>
+            <section class="action-cards" style="margin-bottom: 20px;">
+                <a class="action-card <%= "all".equalsIgnoreCase(activeTab) ? "" : "" %>" href="${pageContext.request.contextPath}/staff/myRequests?tab=all">
+                    <div class="action-icon secondary-bg"><i class="fas fa-layer-group"></i></div>
+                    <h3>All</h3>
+                    <p>View all requests.</p>
+                </a>
+                <a class="action-card" href="${pageContext.request.contextPath}/staff/myRequests?tab=pending">
+                    <div class="action-icon pending-bg"><i class="fas fa-hourglass-half"></i></div>
+                    <h3>Pending (${pendingCount})</h3>
+                    <p>Awaiting manager action.</p>
+                </a>
+                <a class="action-card" href="${pageContext.request.contextPath}/staff/myRequests?tab=approved">
+                    <div class="action-icon success-bg"><i class="fas fa-check-circle"></i></div>
+                    <h3>Approved (${approvedCount})</h3>
+                    <p>Approved/confirmed requests.</p>
+                </a>
+                <a class="action-card" href="${pageContext.request.contextPath}/staff/myRequests?tab=rejected">
+                    <div class="action-icon danger-bg"><i class="fas fa-xmark-circle"></i></div>
+                    <h3>Rejected (${rejectedCount})</h3>
+                    <p>Rejected requests.</p>
+                </a>
+            </section>
+
+            <section class="card" style="margin-bottom: 24px;">
+                <div class="card-header"><h3><i class="fas fa-magnifying-glass"></i>Search</h3></div>
+                <div class="card-body">
+                    <form class="filter-form" style="padding: 0;" method="get" action="${pageContext.request.contextPath}/staff/myRequests">
+                        <input type="hidden" name="tab" value="<%= activeTab %>">
+                        <div class="form-group">
+                            <label for="search">Search Query</label>
+                            <input id="search" class="form-control" type="search" name="search" value="<%= search %>" placeholder="Request ID, driver, or destination">
+                        </div>
+                        <div class="filter-actions">
+                            <button class="btn btn-primary" type="submit">Search</button>
+                            <a class="btn btn-outline" href="${pageContext.request.contextPath}/staff/myRequests">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header"><h3><i class="fas fa-table"></i>Request Results</h3></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Driver</th>
+                                <th>Initials</th>
+                                <th>Destination</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <% if (requestsList.isEmpty()) { %>
+                            <tr><td colspan="7" class="text-muted">No requests matched the current filters.</td></tr>
+                            <% } else {
+                                for (Request item : requestsList) {
+                                    String status = item.getStatus() == null ? "Pending" : item.getStatus();
+                                    String statusClass;
+                                    if ("Approved".equalsIgnoreCase(status) || "Confirmed".equalsIgnoreCase(status)) {
+                                        statusClass = "approved";
+                                    } else if ("Rejected".equalsIgnoreCase(status)) {
+                                        statusClass = "rejected";
+                                    } else {
+                                        statusClass = "pending";
+                                    }
+                            %>
+                            <tr>
+                                <td class="fw-600"><%= item.getId() %></td>
+                                <td><%= item.getDate() %></td>
+                                <td><%= item.getDriver() %></td>
+                                <td><%= item.getDriverInitials() %></td>
+                                <td><%= item.getDestination() %></td>
+                                <td><%= item.getDepartment() == null ? "-" : item.getDepartment() %></td>
+                                <td><span class="badge badge-status-<%= statusClass %>"><%= status %></span></td>
+                            </tr>
+                            <% }
+                            } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
 </div>
 </body>
 </html>

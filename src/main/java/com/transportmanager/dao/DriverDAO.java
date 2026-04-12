@@ -13,9 +13,53 @@ import java.util.List;
 
 public class DriverDAO {
 
+	public List<Driver> findAllDrivers() {
+		String sql = """
+			SELECT id, full_name, license_number, status
+			FROM users
+			WHERE role = 'DRIVER'
+			ORDER BY full_name ASC, id ASC
+		""";
+		List<Driver> drivers = new ArrayList<>();
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql);
+			 ResultSet rs = statement.executeQuery()) {
+			while (rs.next()) {
+				Driver driver = new Driver();
+				driver.setId(rs.getLong("id"));
+				driver.setFullName(rs.getString("full_name"));
+				driver.setLicenseNumber(rs.getString("license_number"));
+				driver.setStatus(rs.getString("status"));
+				drivers.add(driver);
+			}
+			return drivers;
+		} catch (SQLException ex) {
+			return Collections.emptyList();
+		}
+	}
+
+	public boolean createApprovedDriver(String fullName, String email, String username, String licenseNumber, String rawPassword) {
+		String sql = """
+			INSERT INTO users
+			(full_name, email, username, password_hash, role, license_number, status, is_active, created_at)
+			VALUES (?, ?, ?, crypt(?, gen_salt('bf', 12)), 'DRIVER', ?, 'AVAILABLE', TRUE, NOW())
+		""";
+		try (Connection connection = DbUtil.getConnection();
+			 PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setString(1, fullName);
+			statement.setString(2, email);
+			statement.setString(3, username);
+			statement.setString(4, rawPassword);
+			statement.setString(5, licenseNumber);
+			return statement.executeUpdate() > 0;
+		} catch (SQLException ex) {
+			return false;
+		}
+	}
+
 	public List<Driver> findAvailableDriversForTrip(long tripId) {
 		String sql = """
-			SELECT u.id, u.full_name
+			SELECT u.id, u.full_name, u.license_number
 			FROM users u
 			WHERE u.role = 'DRIVER'
 			  AND NOT EXISTS (
@@ -35,6 +79,7 @@ public class DriverDAO {
 					Driver driver = new Driver();
 					driver.setId(rs.getLong("id"));
 					driver.setFullName(rs.getString("full_name"));
+					driver.setLicenseNumber(rs.getString("license_number"));
 					driver.setStatus("AVAILABLE");
 					drivers.add(driver);
 				}
@@ -69,4 +114,3 @@ public class DriverDAO {
 		}
 	}
 }
-

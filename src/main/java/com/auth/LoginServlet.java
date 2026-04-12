@@ -12,9 +12,20 @@ import java.io.IOException;
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
+    private transient AuthDAO authDAO;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        this.authDAO = new AuthDAO();
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if ("1".equals(request.getParameter("loggedOut"))) {
+            request.setAttribute("logoutMessage", "You have been logged out.");
+        }
         request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
 
@@ -22,7 +33,7 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String username = trimToEmpty(request.getParameter("username"));
+        String username = trimToEmpty(request.getParameter("username")).toLowerCase();
         String password = trimToEmpty(request.getParameter("password"));
 
         if (username.isEmpty() || password.isEmpty()) {
@@ -31,42 +42,49 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // Create a new session for the user
+        AuthUser user = authDAO.authenticate(username, password);
+        if (user == null) {
+            request.setAttribute("error", "Invalid credentials. Try again.");
+            request.setAttribute("username", username);
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+            return;
+        }
+
+        authDAO.markSuccessfulLogin(user.getId());
+
         HttpSession session = request.getSession(true);
-        session.setMaxInactiveInterval(30 * 60); // 30 minutes timeout
-        session.setAttribute("username", username);
+        session.setMaxInactiveInterval(30 * 60);
+        session.setAttribute("username", user.getUsername());
+        session.setAttribute("fullName", user.getFullName());
+        session.setAttribute("userRole", user.getRole());
+        if ("TRANSPORT_MANAGER".equalsIgnoreCase(user.getRole())) {
+            session.setAttribute("managerUsername", user.getUsername());
+        }
 
-        // --- ROLE-BASED ROUTING ---
-        // We are using clean, standardized URLs for every role's dashboard.
-
-        if ("dean".equals(username) && "dean123".equals(password)) {
-            session.setAttribute("userRole", "DEAN");
+        String role = user.getRole() == null ? "" : user.getRole().toUpperCase();
+        if ("DEAN".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/dean/dashboard");
             return;
         }
-
-        if ("manager".equals(username) && "manager123".equals(password)) {
-            session.setAttribute("userRole", "TRANSPORT_MANAGER");
+        if ("TRANSPORT_MANAGER".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/manager/dashboard");
             return;
         }
-
-        if ("staff".equals(username) && "staff123".equals(password)) {
-            session.setAttribute("userRole", "STAFF");
+        if ("STAFF".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/staff/dashboard");
             return;
         }
-
-        if ("driver".equals(username) && "driver123".equals(password)) {
-            session.setAttribute("userRole", "DRIVER");
+        if ("DRIVER".equals(role)) {
             response.sendRedirect(request.getContextPath() + "/driver/dashboard");
             return;
         }
+        if ("TIMETABLING_STAFF".equals(role)) {
+            response.sendRedirect(request.getContextPath() + "/timetabling/dashboard");
+            return;
+        }
 
-        // If we get here, credentials failed
-        session.invalidate(); // Destroy the session we just made
-        request.setAttribute("error", "Invalid credentials. Try again.");
-        request.setAttribute("username", username); // Keep username in the box so they don't have to retype it
+        session.invalidate();
+        request.setAttribute("error", "Your account role is not configured for this system.");
         request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
 

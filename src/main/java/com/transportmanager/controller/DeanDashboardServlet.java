@@ -48,7 +48,7 @@ public class DeanDashboardServlet extends HttpServlet {
             request.setAttribute("dashboardStats", dashboardStats);
 
             // Fetch recent trips for overview
-            List<Trip> recentTrips = tripDAO.findPendingTripsSorted(1, 10, null, null, null);
+            List<Trip> recentTrips = tripDAO.findPendingClubTrips(10);
             request.setAttribute("recentTrips", recentTrips);
 
             // Fetch fleet utilization data
@@ -78,6 +78,10 @@ public class DeanDashboardServlet extends HttpServlet {
                 COALESCE(SUM(CASE WHEN tr.status = 'PENDING' THEN tr.passenger_count ELSE 0 END), 0) as pending_passengers
             FROM trip_request tr
             WHERE tr.departure_time >= CURRENT_DATE - INTERVAL '30 days'
+              AND (
+                  COALESCE(tr.manager_note, '') ILIKE '%club%'
+                  OR COALESCE(tr.destination, '') ILIKE 'club:%'
+              )
         """;
 
         try (Connection connection = DbUtil.getConnection();

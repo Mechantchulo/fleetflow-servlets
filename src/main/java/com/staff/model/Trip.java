@@ -9,6 +9,9 @@ public class Trip {
     private String duration;
     private String status;
 
+    public Trip() {
+    }
+
     public Trip(int id, String date, String driver, String driverInitials,
                 String route, String duration, String status) {
         this.id = id;
@@ -27,4 +30,12 @@ public class Trip {
     public String getRoute() { return route; }
     public String getDuration() { return duration; }
     public String getStatus() { return status; }
+
+    public void setId(int id) { this.id = id; }
+    public void setDate(String date) { this.date = date; }
+    public void setDriver(String driver) { this.driver = driver; }
+    public void setDriverInitials(String driverInitials) { this.driverInitials = driverInitials; }
+    public void setRoute(String route) { this.route = route; }
+    public void setDuration(String duration) { this.duration = duration; }
+    public void setStatus(String status) { this.status = status; }
 }
