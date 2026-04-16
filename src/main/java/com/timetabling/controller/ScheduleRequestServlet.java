@@ -3,6 +3,7 @@ package com.timetabling.controller;
 import com.timetabling.dao.TimetableDAO;
 import com.transportmanager.dao.TripDAO;
 import com.transportmanager.model.Trip;
+import com.transportmanager.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -65,10 +66,20 @@ public class ScheduleRequestServlet extends HttpServlet {
 		String title = trimToEmpty(request.getParameter("title"));
 		String department = trimToEmpty(request.getParameter("department"));
 		String departureTimeRaw = trimToEmpty(request.getParameter("departureTime"));
-		BigDecimal budgetAmount = parsePositiveMoneyOrDefault(request.getParameter("budgetAmount"), BigDecimal.ZERO);
+		String budgetRaw = trimToEmpty(request.getParameter("budgetAmount"));
+		BigDecimal budgetParsed = ValidationUtil.parseNonNegativeMoneyOrNull(budgetRaw);
+		BigDecimal budgetAmount = budgetParsed == null ? BigDecimal.ZERO : budgetParsed;
 
 		if (tripRequestId <= 0 || title.isBlank() || departureTimeRaw.isBlank()) {
 			response.sendRedirect(request.getContextPath() + "/timetabling/requests/schedule?id=" + tripRequestId + "&error=missingSchedulingFields");
+			return;
+		}
+		if (!department.isBlank() && !ValidationUtil.isAlphabeticWithSpaces(department)) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/requests/schedule?id=" + tripRequestId + "&error=invalidDepartment");
+			return;
+		}
+		if (!budgetRaw.isBlank() && budgetParsed == null) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/requests/schedule?id=" + tripRequestId + "&error=invalidBudgetAmount");
 			return;
 		}
 
@@ -100,18 +111,6 @@ public class ScheduleRequestServlet extends HttpServlet {
 		}
 
 		response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?success=requestScheduled");
-	}
-
-	private BigDecimal parsePositiveMoneyOrDefault(String raw, BigDecimal defaultValue) {
-		if (raw == null || raw.isBlank()) {
-			return defaultValue;
-		}
-		try {
-			BigDecimal value = new BigDecimal(raw.trim());
-			return value.signum() < 0 ? defaultValue : value;
-		} catch (NumberFormatException ex) {
-			return defaultValue;
-		}
 	}
 
 	private long parsePositiveLongOrDefault(String raw, long defaultValue) {

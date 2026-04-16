@@ -130,3 +130,48 @@ Check those files for current usernames/credentials in your environment.
 - Keep SQL scripts idempotent (`IF NOT EXISTS`) when adding migrations.
 - Document new endpoints/flows in `docs/`.
 - For shared environments, avoid committing real secrets in `.env`.
+
+## 12) Validation changes log
+
+The following files were updated to enforce:
+- no numbers/symbols in username fields
+- letters/spaces-only in name/department fields
+- numeric values not going below `0` where applicable
+
+### Backend (server-side)
+
+- `src/main/java/com/transportmanager/util/ValidationUtil.java`
+  - Added shared validation helpers for text and non-negative numbers.
+- `src/main/java/com/auth/StaffSignupServlet.java`
+  - Added full name, department, and username format checks.
+- `src/main/java/com/auth/AuthDAO.java`
+  - Added DAO-level fallback checks for staff registration validation.
+- `src/main/java/com/transportmanager/controller/ManagerDriversServlet.java`
+  - Added full name and username format checks for driver creation.
+- `src/main/java/com/transportmanager/dao/DriverDAO.java`
+  - Added DAO-level fallback checks for driver creation validation.
+- `src/main/java/com/staff/servletss/StaffDashboardServlet.java`
+  - Enforced non-negative passengers and department text validation.
+- `src/main/java/com/staff/dao/StaffTripDAO.java`
+  - Updated passenger storage guard from minimum `1` to minimum `0`.
+- `src/main/java/com/timetabling/controller/TimetablingDashboardServlet.java`
+  - Added non-negative passenger/budget validation and department format checks.
+- `src/main/java/com/timetabling/controller/ScheduleRequestServlet.java`
+  - Added non-negative budget validation and department format checks.
+- `src/main/java/com/driver/TripLogs/TripLogServlet.java`
+  - Added non-negative mileage/fuel validation.
+- `src/main/java/com/driver/FuelLogs/FuelLogsServlet.java`
+  - Added non-negative mileage/fuel validation.
+
+### Frontend forms (client-side constraints)
+
+- `src/main/webapp/WEB-INF/auth/staffSignup.jsp`
+  - Added `pattern` constraints for full name, department, and username.
+- `src/main/webapp/WEB-INF/manager/manageDrivers.jsp`
+  - Added `pattern` constraints for full name and username.
+- `src/main/webapp/WEB-INF/staff/staffDashboard.jsp`
+  - Added department `pattern` and passengers `min="0"`.
+- `src/main/webapp/WEB-INF/timetabling/timetablingDashboard.jsp`
+  - Added department `pattern` and non-negative numeric limits.
+- `src/main/webapp/WEB-INF/timetabling/scheduleRequest.jsp`
+  - Added department `pattern` and non-negative budget limit.

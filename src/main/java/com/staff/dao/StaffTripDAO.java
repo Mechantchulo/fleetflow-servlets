@@ -47,7 +47,7 @@ public class StaffTripDAO {
             } else {
                 statement.setTimestamp(2, Timestamp.valueOf(preferredDate.atTime(8, 0)));
             }
-            statement.setInt(3, Math.max(1, passengers));
+            statement.setInt(3, Math.max(0, passengers));
             statement.setLong(4, staffId);
             statement.setString(5, purpose);
             statement.setBigDecimal(6, sanitizeBudget(requestedBudget));

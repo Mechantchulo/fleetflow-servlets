@@ -28,9 +28,9 @@ public class TripLogServlet extends HttpServlet {
         // Form to add trip log
         out.println("<h3>Add Trip Log</h3>");
         out.println("<form method='post'>");
-        out.println("Start Mileage: <input type='number' name='startMileage' required><br>");
-        out.println("End Mileage: <input type='number' name='endMileage' required><br>");
-        out.println("Fuel Used (Litres): <input type='number' step='0.1' name='fuelUsed' required><br>");
+        out.println("Start Mileage: <input type='number' min='0' name='startMileage' required><br>");
+        out.println("End Mileage: <input type='number' min='0' name='endMileage' required><br>");
+        out.println("Fuel Used (Litres): <input type='number' min='0' step='0.1' name='fuelUsed' required><br>");
         out.println("Trip Time: <input type='datetime-local' name='timestamp' required><br>");
         out.println("Comments: <input type='text' name='comments'><br>");
         out.println("<button type='submit'>Add Trip Log</button>");
@@ -74,6 +74,10 @@ public class TripLogServlet extends HttpServlet {
             int startMileage = Integer.parseInt(startStr);
             int endMileage = Integer.parseInt(endStr);
             double fuelUsed = Double.parseDouble(fuelStr);
+            if (startMileage < 0 || endMileage < 0 || fuelUsed < 0) {
+                response.getWriter().println("Start mileage, end mileage, and fuel used cannot be negative");
+                return;
+            }
 
             if (endMileage < startMileage) {
                 response.getWriter().println("End Mileage cannot be less than Start Mileage");

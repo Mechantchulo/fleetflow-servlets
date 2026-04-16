@@ -89,7 +89,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="department">Department</label>
-                                    <input type="text" id="department" name="department" class="form-control" value="<%= selectedRequest.getDepartment() == null ? "" : selectedRequest.getDepartment() %>" required>
+                                    <input type="text" id="department" name="department" class="form-control" pattern="[A-Za-z ]+" title="Use letters and spaces only" value="<%= selectedRequest.getDepartment() == null ? "" : selectedRequest.getDepartment() %>" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="departureTime">Allocated Date/Time</label>

@@ -109,7 +109,7 @@
 
                                     <div class="form-group">
                                         <label for="department">Department</label>
-                                        <input type="text" name="department" id="department" class="form-control" value="<%= staffDepartment == null ? "" : staffDepartment %>" <%= departmentLocked ? "readonly" : "" %> required>
+                                        <input type="text" name="department" id="department" class="form-control" pattern="[A-Za-z ]+" title="Use letters and spaces only" value="<%= staffDepartment == null ? "" : staffDepartment %>" <%= departmentLocked ? "readonly" : "" %> required>
                                     </div>
                                     
                                     <div class="form-group">
@@ -119,7 +119,7 @@
 
                                     <div class="form-group">
                                         <label for="passengers">Number of Passengers</label>
-                                        <input type="number" name="passengers" id="passengers" class="form-control" min="1" placeholder="e.g., 150" required>
+                                        <input type="number" name="passengers" id="passengers" class="form-control" min="0" placeholder="e.g., 150" required>
                                     </div>
 
                                     <div class="form-group">

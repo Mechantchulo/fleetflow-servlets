@@ -2,6 +2,7 @@ package com.staff.servletss;
 
 import com.staff.dao.StaffTripDAO;
 import com.staff.model.Request;
+import com.transportmanager.util.ValidationUtil;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -107,6 +108,10 @@ public class StaffDashboardServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Department is required.");
             return;
         }
+        if (!ValidationUtil.isAlphabeticWithSpaces(department)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Department must contain letters and spaces only.");
+            return;
+        }
 
         int passengers;
         try {
@@ -116,8 +121,8 @@ public class StaffDashboardServlet extends HttpServlet {
             return;
         }
 
-        if (passengers <= 0) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Passengers must be greater than 0.");
+        if (passengers < 0) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Passengers cannot be negative.");
             return;
         }
 

@@ -4,6 +4,7 @@ import com.timetabling.dao.TimetableDAO;
 import com.timetabling.model.TimetableEntry;
 import com.transportmanager.dao.TripDAO;
 import com.transportmanager.model.Trip;
+import com.transportmanager.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -116,11 +117,27 @@ public class TimetablingDashboardServlet extends HttpServlet {
 		String department = trimToEmpty(request.getParameter("department"));
 		String destination = trimToEmpty(request.getParameter("destination"));
 		String departureTimeRaw = trimToEmpty(request.getParameter("departureTime"));
-		int expectedPassengerCount = parsePositiveIntOrDefault(request.getParameter("expectedPassengerCount"), 0);
-		BigDecimal budgetAmount = parsePositiveMoneyOrDefault(request.getParameter("budgetAmount"), BigDecimal.ZERO);
+		String expectedPassengerRaw = trimToEmpty(request.getParameter("expectedPassengerCount"));
+		String budgetRaw = trimToEmpty(request.getParameter("budgetAmount"));
+		Integer expectedPassengerParsed = ValidationUtil.parseNonNegativeIntOrNull(expectedPassengerRaw);
+		BigDecimal budgetParsed = ValidationUtil.parseNonNegativeMoneyOrNull(budgetRaw);
+		int expectedPassengerCount = expectedPassengerParsed == null ? 0 : expectedPassengerParsed;
+		BigDecimal budgetAmount = budgetParsed == null ? BigDecimal.ZERO : budgetParsed;
 
 		if (title.isBlank() || destination.isBlank() || departureTimeRaw.isBlank()) {
 			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=missingRequiredFields");
+			return;
+		}
+		if (!department.isBlank() && !ValidationUtil.isAlphabeticWithSpaces(department)) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=invalidDepartment");
+			return;
+		}
+		if (!expectedPassengerRaw.isBlank() && expectedPassengerParsed == null) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=invalidExpectedPassengerCount");
+			return;
+		}
+		if (!budgetRaw.isBlank() && budgetParsed == null) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=invalidBudgetAmount");
 			return;
 		}
 
@@ -162,10 +179,20 @@ public class TimetablingDashboardServlet extends HttpServlet {
 		String title = trimToEmpty(request.getParameter("title"));
 		String department = trimToEmpty(request.getParameter("department"));
 		String departureTimeRaw = trimToEmpty(request.getParameter("departureTime"));
-		BigDecimal budgetAmount = parsePositiveMoneyOrDefault(request.getParameter("budgetAmount"), BigDecimal.ZERO);
+		String budgetRaw = trimToEmpty(request.getParameter("budgetAmount"));
+		BigDecimal budgetParsed = ValidationUtil.parseNonNegativeMoneyOrNull(budgetRaw);
+		BigDecimal budgetAmount = budgetParsed == null ? BigDecimal.ZERO : budgetParsed;
 
 		if (tripRequestId <= 0 || title.isBlank() || departureTimeRaw.isBlank()) {
 			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=missingSchedulingFields");
+			return;
+		}
+		if (!department.isBlank() && !ValidationUtil.isAlphabeticWithSpaces(department)) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=invalidDepartment");
+			return;
+		}
+		if (!budgetRaw.isBlank() && budgetParsed == null) {
+			response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?error=invalidBudgetAmount");
 			return;
 		}
 
@@ -197,30 +224,6 @@ public class TimetablingDashboardServlet extends HttpServlet {
 		}
 
 		response.sendRedirect(request.getContextPath() + "/timetabling/dashboard?success=requestScheduled");
-	}
-
-	private int parsePositiveIntOrDefault(String raw, int defaultValue) {
-		if (raw == null || raw.isBlank()) {
-			return defaultValue;
-		}
-		try {
-			int value = Integer.parseInt(raw.trim());
-			return value < 0 ? defaultValue : value;
-		} catch (NumberFormatException ex) {
-			return defaultValue;
-		}
-	}
-
-	private BigDecimal parsePositiveMoneyOrDefault(String raw, BigDecimal defaultValue) {
-		if (raw == null || raw.isBlank()) {
-			return defaultValue;
-		}
-		try {
-			BigDecimal value = new BigDecimal(raw.trim());
-			return value.signum() < 0 ? defaultValue : value;
-		} catch (NumberFormatException ex) {
-			return defaultValue;
-		}
 	}
 
 	private long parsePositiveLongOrDefault(String raw, long defaultValue) {

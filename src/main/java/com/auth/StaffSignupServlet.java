@@ -1,5 +1,6 @@
 package com.auth;
 
+import com.transportmanager.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -36,6 +37,27 @@ public class StaffSignupServlet extends HttpServlet {
 
         if (fullName.isEmpty() || department.isEmpty() || email.isEmpty() || username.isEmpty() || password.isEmpty()) {
             request.setAttribute("error", "All fields are required.");
+            preserveInputs(request, fullName, department, email, username);
+            request.getRequestDispatcher("/WEB-INF/auth/staffSignup.jsp").forward(request, response);
+            return;
+        }
+
+        if (!ValidationUtil.isAlphabeticWithSpaces(fullName)) {
+            request.setAttribute("error", "Full name must contain letters and spaces only.");
+            preserveInputs(request, fullName, department, email, username);
+            request.getRequestDispatcher("/WEB-INF/auth/staffSignup.jsp").forward(request, response);
+            return;
+        }
+
+        if (!ValidationUtil.isAlphabeticWithSpaces(department)) {
+            request.setAttribute("error", "Department must contain letters and spaces only.");
+            preserveInputs(request, fullName, department, email, username);
+            request.getRequestDispatcher("/WEB-INF/auth/staffSignup.jsp").forward(request, response);
+            return;
+        }
+
+        if (!ValidationUtil.isAlphabetic(username)) {
+            request.setAttribute("error", "Username must contain letters only (no numbers or symbols).");
             preserveInputs(request, fullName, department, email, username);
             request.getRequestDispatcher("/WEB-INF/auth/staffSignup.jsp").forward(request, response);
             return;

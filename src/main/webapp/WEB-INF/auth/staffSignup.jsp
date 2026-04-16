@@ -36,11 +36,11 @@
             <form action="${pageContext.request.contextPath}/signup/staff" method="post" class="login-form">
                 <div class="form-group">
                     <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" name="fullName" value="${fullName}" required>
+                    <input type="text" id="fullName" name="fullName" value="${fullName}" pattern="[A-Za-z ]+" title="Use letters and spaces only" required>
                 </div>
                 <div class="form-group">
                     <label for="department">Department</label>
-                    <input type="text" id="department" name="department" value="${department}" required>
+                    <input type="text" id="department" name="department" value="${department}" pattern="[A-Za-z ]+" title="Use letters and spaces only" required>
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" value="${username}" required>
+                    <input type="text" id="username" name="username" value="${username}" pattern="[A-Za-z]+" title="Use letters only (no numbers or symbols)" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>

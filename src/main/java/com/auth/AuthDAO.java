@@ -1,6 +1,7 @@
 package com.auth;
 
 import com.transportmanager.util.DbUtil;
+import com.transportmanager.util.ValidationUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -72,6 +73,11 @@ public class AuthDAO {
 	                             String username,
 	                             String rawPassword) {
 		if (isBlank(fullName) || isBlank(department) || isBlank(email) || isBlank(username) || isBlank(rawPassword)) {
+			return false;
+		}
+		if (!ValidationUtil.isAlphabeticWithSpaces(fullName)
+				|| !ValidationUtil.isAlphabeticWithSpaces(department)
+				|| !ValidationUtil.isAlphabetic(username)) {
 			return false;
 		}
 

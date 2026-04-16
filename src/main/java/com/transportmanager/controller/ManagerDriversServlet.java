@@ -3,6 +3,7 @@ package com.transportmanager.controller;
 import com.transportmanager.dao.DriverDAO;
 import com.transportmanager.model.Driver;
 import com.transportmanager.util.ManagerSessionUtil;
+import com.transportmanager.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -51,6 +52,14 @@ public class ManagerDriversServlet extends HttpServlet {
 
         if (fullName.isEmpty() || email.isEmpty() || username.isEmpty() || licenseNumber.isEmpty() || password.length() < 8) {
             response.sendRedirect(request.getContextPath() + "/manager/drivers?error=invalidDriverInput");
+            return;
+        }
+        if (!ValidationUtil.isAlphabeticWithSpaces(fullName)) {
+            response.sendRedirect(request.getContextPath() + "/manager/drivers?error=invalidFullName");
+            return;
+        }
+        if (!ValidationUtil.isAlphabetic(username)) {
+            response.sendRedirect(request.getContextPath() + "/manager/drivers?error=invalidUsername");
             return;
         }
 

@@ -2,6 +2,7 @@ package com.transportmanager.dao;
 
 import com.transportmanager.model.Driver;
 import com.transportmanager.util.DbUtil;
+import com.transportmanager.util.ValidationUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,6 +40,12 @@ public class DriverDAO {
 	}
 
 	public boolean createApprovedDriver(String fullName, String email, String username, String licenseNumber, String rawPassword) {
+		if (fullName == null || email == null || username == null || licenseNumber == null || rawPassword == null) {
+			return false;
+		}
+		if (!ValidationUtil.isAlphabeticWithSpaces(fullName) || !ValidationUtil.isAlphabetic(username)) {
+			return false;
+		}
 		String sql = """
 			INSERT INTO users
 			(full_name, email, username, password_hash, role, license_number, status, is_active, created_at)

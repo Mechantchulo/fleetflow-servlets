@@ -1,9 +1,14 @@
 package com.transportmanager.util;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
 
 public final class ValidationUtil {
+
+	private static final Pattern LETTERS_ONLY = Pattern.compile("^[A-Za-z]+$");
+	private static final Pattern LETTERS_AND_SPACES = Pattern.compile("^[A-Za-z ]+$");
 
 	private ValidationUtil() {
 	}
@@ -33,6 +38,44 @@ public final class ValidationUtil {
 		} catch (NumberFormatException ex) {
 			return defaultValue;
 		}
+	}
+
+	public static Integer parseNonNegativeIntOrNull(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		try {
+			int value = Integer.parseInt(raw.trim());
+			return value < 0 ? null : value;
+		} catch (NumberFormatException ex) {
+			return null;
+		}
+	}
+
+	public static BigDecimal parseNonNegativeMoneyOrNull(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		try {
+			BigDecimal value = new BigDecimal(raw.trim());
+			return value.signum() < 0 ? null : value;
+		} catch (NumberFormatException ex) {
+			return null;
+		}
+	}
+
+	public static boolean isAlphabetic(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return false;
+		}
+		return LETTERS_ONLY.matcher(raw.trim()).matches();
+	}
+
+	public static boolean isAlphabeticWithSpaces(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return false;
+		}
+		return LETTERS_AND_SPACES.matcher(raw.trim()).matches();
 	}
 
 	public static String trimToNull(String raw) {
@@ -76,4 +119,3 @@ public final class ValidationUtil {
 		return null;
 	}
 }
-

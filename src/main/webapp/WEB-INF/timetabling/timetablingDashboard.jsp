@@ -85,7 +85,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="department">Department</label>
-                                <input type="text" id="department" name="department" class="form-control" placeholder="e.g. School of Engineering">
+                                <input type="text" id="department" name="department" class="form-control" pattern="[A-Za-z ]+" title="Use letters and spaces only" placeholder="e.g. School of Engineering">
                             </div>
                             <div class="form-group">
                                 <label for="destination">Destination</label>

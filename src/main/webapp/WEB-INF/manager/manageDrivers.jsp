@@ -52,9 +52,9 @@
                     <div class="card-header"><h3><i class="fas fa-user-plus"></i>Add Approved Driver</h3></div>
                     <div class="card-body">
                         <form method="post" action="${pageContext.request.contextPath}/manager/drivers">
-                            <div class="form-group"><label for="fullName">Full Name</label><input id="fullName" name="fullName" class="form-control" required></div>
+                            <div class="form-group"><label for="fullName">Full Name</label><input id="fullName" name="fullName" class="form-control" pattern="[A-Za-z ]+" title="Use letters and spaces only" required></div>
                             <div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" class="form-control" required></div>
-                            <div class="form-group"><label for="username">Username</label><input id="username" name="username" class="form-control" required></div>
+                            <div class="form-group"><label for="username">Username</label><input id="username" name="username" class="form-control" pattern="[A-Za-z]+" title="Use letters only (no numbers or symbols)" required></div>
                             <div class="form-group"><label for="licenseNumber">License Number</label><input id="licenseNumber" name="licenseNumber" class="form-control" required></div>
                             <div class="form-group"><label for="password">Temporary Password</label><input id="password" name="password" type="password" minlength="8" class="form-control" required></div>
                             <button class="btn btn-primary w-100" type="submit">Save Driver</button>
